@@ -67,6 +67,7 @@ namespace Concurrent
             }
             // generally better to signal outside the lock scope to avoid grabbing the lock
             // and immediately return to sleep when they find the waiting condition hasn't been changed.
+            // For details, see https://learn.microsoft.com/en-us/windows/win32/sync/condition-variables?redirectedfrom=MSDN
             Monitor.Pulse(_buffer);
         }
 
