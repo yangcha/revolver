@@ -2,7 +2,7 @@
 using System.Threading;
 
 
-namespace revolver
+namespace Concurrent
 {
     public class Revolver<T> where T : IDisposable
     {
