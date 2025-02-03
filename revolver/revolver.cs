@@ -65,6 +65,8 @@ namespace Concurrent
                     Increment(ref _tail);
                 }
             }
+            // generally better to signal outside the lock scope to avoid grabbing the lock
+            // and immediately return to sleep when they find the waiting condition hasn't been changed.
             Monitor.Pulse(_buffer);
         }
 
