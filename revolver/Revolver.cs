@@ -103,10 +103,13 @@ namespace Concurrent
                 if (disposing)
                 {
                     // dispose managed state (managed objects)
-                    for(int i = 0; i < _buffer.Length; i++)
+                    lock (_buffer)
                     {
-                        _buffer[i]?.Dispose();
-                        _buffer[i] = default;
+                        for (int i = 0; i < _buffer.Length; i++)
+                        {
+                            _buffer[i]?.Dispose();
+                            _buffer[i] = default;
+                        }
                     }
                 }
 
