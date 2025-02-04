@@ -27,7 +27,7 @@ namespace revolver
                     }
                 });
 
-                // A simple blocking producer with no cancellation.
+                // A simple non-blocking producer with no cancellation.
                 Task.Run(() =>
                 {
                     for (int i = 0; i < itemsToAdd; i++)
