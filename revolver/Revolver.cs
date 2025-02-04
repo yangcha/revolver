@@ -45,8 +45,6 @@ namespace Concurrent
             lock (_buffer)
             {
                 IsAddingCompleted = true;
-                _head = 1;
-                _tail = 0;
                 Monitor.Pulse(_buffer);
             }
         }
@@ -89,17 +87,21 @@ namespace Concurrent
         /// <returns></returns>
         public T Take()
         {
-            var item = default(T);
             lock (_buffer)
             {
-                while (IsEmpty)
+                while (IsEmpty && !IsAddingCompleted)
                 {
                     Monitor.Wait(_buffer);
                 }
-                (item, _buffer[_tail]) = (_buffer[_tail], item);
+                if (IsAddingCompleted)
+                {
+                    return default(T);
+                }
+                var item = _buffer[_tail];
+                _buffer[_tail] = default;
                 Increment(ref _tail);
+                return item;
             }
-            return item;
         }
 
         protected virtual void Dispose(bool disposing)
