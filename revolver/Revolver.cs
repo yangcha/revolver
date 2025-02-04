@@ -33,7 +33,7 @@ namespace Concurrent
         /// Maximum capacity of the buffer. If the maximum capacity is reached,
         /// then overwrite the next element.
         /// </summary>
-        public int Capacity { get { lock (_buffer) { return _bufferSize - 1; } } }
+        public int Capacity { get { return _bufferSize - 1; } }
 
         /// <summary>
         /// The size of buffer
