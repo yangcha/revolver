@@ -111,7 +111,7 @@ namespace Concurrent
                     for(int i = 0; i < _buffer.Length; i++)
                     {
                         _buffer[i]?.Dispose();
-                        _buffer[i] = default(T);
+                        _buffer[i] = default;
                     }
                 }
 
