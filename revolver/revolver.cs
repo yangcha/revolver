@@ -4,14 +4,16 @@ using System.Threading;
 
 namespace Concurrent
 {
-    public class Revolver<T> where T : IDisposable
+    public class Revolver<T> : IDisposable where T : IDisposable
     {
         private readonly T[] _buffer;
 
         private readonly int _bufferSize;
-
         private int _head;
         private int _tail;
+        private bool disposedValue;
+
+        private bool IsAddingCompleted { get; set; }
 
         public Revolver(int capacity)
         {
@@ -24,24 +26,36 @@ namespace Concurrent
             _tail = 0;
             _bufferSize = capacity + 1;
             _buffer = new T[_bufferSize];
+            IsAddingCompleted = false;
         }
 
         /// <summary>
         /// Maximum capacity of the buffer. If the maximum capacity is reached,
         /// then overwrite the next element.
         /// </summary>
-        public int Capacity { get { return _bufferSize - 1; } }
+        public int Capacity { get { lock (_buffer) { return _bufferSize - 1; } } }
 
         /// <summary>
         /// The size of buffer
         /// </summary>
-        public int Size { get { return (_head - _tail + _bufferSize) % _bufferSize; } }
+        public int Count { get { lock (_buffer) { return (_head - _tail + _bufferSize) % _bufferSize; } } }
+
+        public void CompleteAdding()
+        {
+            if (IsAddingCompleted)
+            {
+                return;
+            }
+            IsAddingCompleted = true;
+        }
 
 
         /// <summary>
         /// If the buffer is empty.
         /// </summary>
         private bool IsEmpty { get { return _head == _tail; } }
+
+        public bool IsCompleted { get { return IsAddingCompleted;  } }
 
         /// <summary>
         ///  Increments the index variable by one with wrapping around.
@@ -64,11 +78,8 @@ namespace Concurrent
                 {
                     Increment(ref _tail);
                 }
+                Monitor.Pulse(_buffer);
             }
-            // generally better to signal outside the lock scope to avoid grabbing the lock
-            // and immediately return to sleep when they find the waiting condition hasn't been changed.
-            // For details, see https://learn.microsoft.com/en-us/windows/win32/sync/condition-variables?redirectedfrom=MSDN
-            Monitor.Pulse(_buffer);
         }
 
         /// <summary>
@@ -83,11 +94,35 @@ namespace Concurrent
                 {
                     Monitor.Wait(_buffer);
                 }
-                var old_tail = _tail;
+                var item = default(T);
+                (item, _buffer[_tail]) = (_buffer[_tail], item);
                 Increment(ref _tail);
-                return _buffer[old_tail];
+                return item;
             }
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // dispose managed state (managed objects)
+                    for(int i = 0; i < _buffer.Length; i++)
+                    {
+                        _buffer[i]?.Dispose();
+                        _buffer[i] = default(T);
+                    }
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }
