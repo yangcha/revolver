@@ -83,17 +83,17 @@ namespace Concurrent
         /// <returns></returns>
         public T Take()
         {
+            var item = default(T);
             lock (_buffer)
             {
                 while (IsEmpty)
                 {
                     Monitor.Wait(_buffer);
                 }
-                var item = _buffer[_tail];
-                _buffer[_tail] = default;
+                (item, _buffer[_tail]) = (_buffer[_tail], item);
                 Increment(ref _tail);
-                return item;
             }
+            return item;
         }
 
         protected virtual void Dispose(bool disposing)
