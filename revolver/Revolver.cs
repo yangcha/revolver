@@ -42,7 +42,13 @@ namespace Concurrent
 
         public void CompleteAdding()
         {
-            IsAddingCompleted = true;
+            lock (_buffer)
+            {
+                IsAddingCompleted = true;
+                _head = 1;
+                _tail = 0;
+                Monitor.Pulse(_buffer);
+            }
         }
 
         public bool IsCompleted { get { return IsAddingCompleted; } }
