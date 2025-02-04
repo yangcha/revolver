@@ -42,20 +42,15 @@ namespace Concurrent
 
         public void CompleteAdding()
         {
-            if (IsAddingCompleted)
-            {
-                return;
-            }
             IsAddingCompleted = true;
         }
 
+        public bool IsCompleted { get { return IsAddingCompleted; } }
 
         /// <summary>
         /// If the buffer is empty.
         /// </summary>
         private bool IsEmpty { get { return _head == _tail; } }
-
-        public bool IsCompleted { get { return IsAddingCompleted;  } }
 
         /// <summary>
         ///  Increments the index variable by one with wrapping around.
@@ -94,8 +89,8 @@ namespace Concurrent
                 {
                     Monitor.Wait(_buffer);
                 }
-                var item = default(T);
-                (item, _buffer[_tail]) = (_buffer[_tail], item);
+                var item = _buffer[_tail];
+                _buffer[_tail] = default;
                 Increment(ref _tail);
                 return item;
             }
