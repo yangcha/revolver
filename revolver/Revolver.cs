@@ -44,7 +44,7 @@ namespace Concurrent
             lock (_buffer)
             {
                 IsAddingCompleted = true;
-                Monitor.Pulse(_buffer);
+                Monitor.PulseAll(_buffer);
             }
         }
 
@@ -76,7 +76,7 @@ namespace Concurrent
                 {
                     Increment(ref _tail);
                 }
-                Monitor.Pulse(_buffer);
+                Monitor.PulseAll(_buffer);
             }
         }
 
