@@ -16,7 +16,7 @@ namespace revolver
             {
                 Task.Run(() =>
                 {
-                    while (!rev.IsCompleted)
+                    while (!rev.IsFinished)
                     {
                         var im = rev.Take();
                         Console.WriteLine("Take:{0} ", im);
@@ -36,7 +36,7 @@ namespace revolver
                         Console.WriteLine("Add:{0} Count={1}", i, rev.Count);
                     }
 
-                    rev.CompleteAdding();
+                    rev.Finish();
                 });
             }
             finally

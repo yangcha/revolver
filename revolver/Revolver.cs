@@ -12,7 +12,7 @@ namespace Concurrent
         private int _tail;
         private bool disposedValue;
 
-        private bool IsAddingCompleted { get; set; }
+        public bool IsFinished { get; private set; }
 
         public Revolver(int capacity)
         {
@@ -25,7 +25,7 @@ namespace Concurrent
             _tail = 0;
             _bufferSize = capacity + 1;
             _buffer = new T[_bufferSize];
-            IsAddingCompleted = false;
+            IsFinished = false;
         }
 
         /// <summary>
@@ -39,16 +39,14 @@ namespace Concurrent
         /// </summary>
         public int Count { get { lock (_buffer) { return (_head - _tail + _bufferSize) % _bufferSize; } } }
 
-        public void CompleteAdding()
+        public void Finish()
         {
             lock (_buffer)
             {
-                IsAddingCompleted = true;
+                IsFinished = true;
                 Monitor.PulseAll(_buffer);
             }
         }
-
-        public bool IsCompleted { get { return IsAddingCompleted; } }
 
         /// <summary>
         /// If the buffer is empty.
@@ -89,11 +87,11 @@ namespace Concurrent
             var item = default(T);
             lock (_buffer)
             {
-                while (IsEmpty && !IsAddingCompleted)
+                while (IsEmpty && !IsFinished)
                 {
                     Monitor.Wait(_buffer);
                 }
-                if (!IsAddingCompleted)
+                if (!IsFinished)
                 {
                     (item, _buffer[_tail]) = (_buffer[_tail], item);
                     Increment(ref _tail);
