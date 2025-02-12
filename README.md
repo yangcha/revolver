@@ -44,3 +44,6 @@ static void Main(string[] args)
     Console.ReadLine();
 }
 ```
+
+## References
+* https://ericlippert.com/2015/11/16/monitor-madness-part-one/
