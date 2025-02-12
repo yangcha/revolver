@@ -47,3 +47,4 @@ static void Main(string[] args)
 
 ## References
 * https://ericlippert.com/2015/11/16/monitor-madness-part-one/
+* https://devblogs.microsoft.com/oldnewthing/20180201-00/?p=97946
