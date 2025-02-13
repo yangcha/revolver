@@ -3,7 +3,11 @@ using System.Threading;
 
 namespace Concurrent
 {
-    public class Revolver<T> : IDisposable where T : IDisposable
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public sealed class Revolver<T> : IDisposable where T : class, IDisposable
     {
         private readonly T[] _buffer;
 
@@ -32,12 +36,21 @@ namespace Concurrent
         /// Maximum capacity of the buffer. If the maximum capacity is reached,
         /// then overwrite the next element.
         /// </summary>
-        public int Capacity { get { return _bufferSize - 1; } }
+        public int Capacity => _bufferSize - 1;
 
         /// <summary>
         /// The size of buffer
         /// </summary>
-        public int Count { get { lock (_buffer) { return (_head - _tail + _bufferSize) % _bufferSize; } } }
+        public int Count
+        {
+            get
+            { 
+                lock (_buffer) 
+                { 
+                    return (_head - _tail + _bufferSize) % _bufferSize; 
+                } 
+            }
+        }
 
         public void Finish()
         {
@@ -51,13 +64,16 @@ namespace Concurrent
         /// <summary>
         /// If the buffer is empty.
         /// </summary>
-        private bool IsEmpty { get { return _head == _tail; } }
+        private bool IsEmpty => _head == _tail;
 
         /// <summary>
         ///  Increments the index variable by one with wrapping around.
         /// </summary>
         /// <param name="value"></param>
-        private void Increment(ref int value) { value = (value + 1) % _bufferSize; }
+        private void Increment(ref int value) 
+        { 
+            value = (value + 1) % _bufferSize; 
+        }
 
         /// <summary>
         /// Adds the item to circular buffer
@@ -84,7 +100,7 @@ namespace Concurrent
         /// <returns></returns>
         public T Take()
         {
-            var item = default(T);
+            T item = null;
             lock (_buffer)
             {
                 while (IsEmpty && !IsFinished)
@@ -100,7 +116,7 @@ namespace Concurrent
             return item;
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
@@ -112,7 +128,7 @@ namespace Concurrent
                         for (int i = 0; i < _buffer.Length; i++)
                         {
                             _buffer[i]?.Dispose();
-                            _buffer[i] = default;
+                            _buffer[i] = null;
                         }
                     }
                 }
