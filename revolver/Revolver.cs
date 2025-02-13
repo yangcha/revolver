@@ -4,7 +4,11 @@ using System.Threading;
 namespace Concurrent
 {
     /// <summary>
-    /// 
+    /// A thread-safe circular buffer in C# is implementing a non-blocking producer-consumer pattern.
+    /// The object is disposable which means its ownership needs to be taken care of.
+    /// The object ownership will be transferred from producer to consumer.
+    /// The consumer is responsible to dispose the object once finished.
+    /// Any unconsumed (dropped) objects will be disposed automatically in a thread-safe way.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public sealed class Revolver<T> : IDisposable where T : class, IDisposable
