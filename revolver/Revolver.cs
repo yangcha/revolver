@@ -5,8 +5,8 @@ namespace Concurrent
 {
     /// <summary>
     /// A thread-safe circular buffer in C# is implementing a non-blocking producer-consumer pattern.
-    /// The object is disposable which means its ownership needs to be taken care of.
-    /// The object ownership will be transferred from producer to consumer.
+    /// The object to be queued is disposable which means its ownership needs to be taken care of.
+    /// Each item has unique ownership. The object ownership is transferred from producer to consumer.
     /// The consumer is responsible to dispose the object once finished.
     /// Any unconsumed (dropped) objects will be disposed automatically in a thread-safe way.
     /// </summary>
@@ -54,11 +54,15 @@ namespace Concurrent
 
         /// <summary>
         /// Signal the consumer to finish the loop.
+        /// This function need to be called in the producer thread.
+        /// No valid item should be added into circular buffer after this call.
         /// </summary>
         public void Finish()
         {
-            // Enqueue one null item to make it exit.
-            AddOne(null);
+            for (int i = 0; i < Capacity; i++)
+            {
+                AddOne(null);
+            }
         }
 
         /// <summary>
@@ -69,7 +73,7 @@ namespace Concurrent
         /// <summary>
         ///  Increments the index variable by one with wrapping around.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">index</param>
         private void Increment(ref int value) 
         { 
             value = (value + 1) % _bufferSize; 
@@ -77,9 +81,9 @@ namespace Concurrent
 
         /// <summary>
         /// Adds the item to circular buffer
-        /// Null item will not be added into queue
+        /// Null item will not be added into buffer
         /// </summary>
-        /// <param name="item"></param>
+        /// <param name="item">item into buffer</param>
         public void Add(T item)
         {
             if (item != null)
@@ -87,6 +91,13 @@ namespace Concurrent
                 AddOne(item);
             }
         }
+
+        /// <summary>
+        /// The ownership model is unique ownership.
+        /// Once the item is added into buffer, the ownership is transferred to one item in buffer in move semantic.
+        /// In other word, the prodcuer relinquish the object ownership to the circular buffer.
+        /// </summary>
+        /// <param name="item">item into buffer</param>
         private void AddOne(T item)
         {
             lock (_buffer)
@@ -103,11 +114,13 @@ namespace Concurrent
         }
 
         /// <summary>
-        /// Removes an item from the circular buffer
-        /// The item ownership is transferred to consumer. The consumer need to dispose the item.
+        /// Removes an item from the circular buffer.
+        /// The ownership model is unique ownership.
+        /// Once the item is taken out from the buffer, the item ownership is transferred to consumer.
+        /// The consumer need to dispose the item after finishing the usage of the item.
         /// Null item signals exit of the loop.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>item to take out from queue</returns>
         public T Take()
         {
             lock (_buffer)
